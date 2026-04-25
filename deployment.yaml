@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app-1
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: flask-app-1
+  template:
+    metadata:
+      labels:
+        app: flask-app-1
+    spec:
+      containers:
+      - name: flask-container
+        image: imran2942/flask-app-1:latest
+        ports:
+        - containerPort: 5000
+
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "300m"
+            memory: "256Mi"
