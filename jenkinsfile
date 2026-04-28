@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "imran2942/flask-app"
+        TAG = "${BUILD_NUMBER}"
+        DOCKERHUB_REPO = "imran2942/flask-app"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/imran2942/flask-app.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t $DOCKERHUB_REPO:$TAG ."
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh "docker push $DOCKERHUB_REPO:$TAG"
+            }
+        }
+
+        stage('Update Kubernetes Manifest') {
+            steps {
+                sh """
+                sed -i 's|image: .*|image: $DOCKERHUB_REPO:$TAG|' k8s/deployment.yaml
+                """
+            }
+        }
+
+        stage('Commit & Push Manifest') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github-jenkins', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                    sh """
+                    git config user.name "imran2942"
+                    git config user.email "imran2942@gmail.com"
+
+                    git add k8s/deployment.yaml
+                    git commit -m "Update image to $TAG [skip ci]" || echo "No changes to commit"
+
+                    git push https://${GIT_USER}:${GIT_TOKEN}@github.com/imran2942/flask-app HEAD:master
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline completed successfully. Argo CD will deploy."
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs."
+        }
+    }
+}
