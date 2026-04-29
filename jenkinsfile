@@ -9,12 +9,12 @@ pipeline {
 
     stages {
 
-        stage('Checkout Code') {
-            steps {
-                git branch: 'master',
-                    url: 'https://github.com/imran2942/flask-app.git'
-            }
-        }
+        // stage('Checkout Code') {
+        //     steps {
+        //         git branch: 'master',
+        //             url: 'https://github.com/imran2942/flask-app.git'
+        //     }
+        // }
 
         stage('Build Docker Image') {
             steps {
