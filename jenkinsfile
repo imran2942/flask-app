@@ -52,7 +52,7 @@ pipeline {
                     git config user.email "imran2942@gmail.com"
 
                     git add k8s/deployment.yaml
-                    git commit -m "Not start again updated image to $TAG"
+                    git commit -m "image updated to $TAG"
 
                     git push https://${GIT_USER}:${GIT_TOKEN}@github.com/imran2942/flask-app HEAD:master
                     """
